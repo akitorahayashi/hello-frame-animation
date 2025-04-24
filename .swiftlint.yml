@@ -1,0 +1,96 @@
+#===================================================================
+# SwiftLint Configuration
+# See https://realm.github.io/SwiftLint/rule-directory.html for rule details
+#===================================================================
+
+#-------------------------------------------------------------------
+# Analysis Targets
+#-------------------------------------------------------------------
+included:
+  - HelloFrameAnimation
+  - HelloFrameAnimationUITests
+
+excluded:
+  - .git
+  - .build
+  - DerivedData
+  - HelloFrameAnimation.xcodeproj
+  - .github
+  - Carthage
+  - build
+  - xcbuild
+  - "**/*.generated.swift"
+
+#-------------------------------------------------------------------
+# Rule Configuration
+#-------------------------------------------------------------------
+disabled_rules:
+  - trailing_whitespace # 行末の空白を許可
+  - line_length # 行の長さは別途カスタマイズ
+  - trailing_newline # 末尾の改行を無視
+  - trailing_comma # SwiftFormatで制御するため無効化
+
+opt_in_rules:
+  - empty_count # count == 0 の代わりに isEmpty を使用
+  - force_unwrapping # 強制アンラップを禁止
+  - sorted_imports # importを整列
+  - vertical_whitespace # 垂直方向の空白行を整理
+
+analyzer_rules:
+  - unused_declaration # 未使用宣言の検出
+  - unused_import # 未使用importの検出
+
+#-------------------------------------------------------------------
+# Individual Rule Settings
+#-------------------------------------------------------------------
+# 関数本体の長さ制限
+function_body_length:
+  warning: 120
+  error: 150
+
+# 型定義の長さ制限
+type_body_length:
+  warning: 300
+  error: 500
+
+# ファイルの長さ制限
+file_length:
+  warning: 800
+  error: 1000
+
+# 循環的複雑度の制限
+cyclomatic_complexity:
+  warning: 10
+  error: 20
+
+# ネスト制限
+nesting:
+  type_level:
+    warning: 3
+  function_level:
+    warning: 5
+
+# 識別子 (変数名、定数名など) の命名規則
+identifier_name:
+  min_length: 2
+  max_length: 50
+  excluded:
+    - id
+    - URL
+    - x
+    - y
+    - i
+    - to
+    - at
+    - of
+    - from
+    - with
+
+# switch文のcaseのアライメント - SwiftFormatと一致させる
+switch_case_alignment:
+  indented_cases: true
+
+#-------------------------------------------------------------------
+# Output Settings
+#-------------------------------------------------------------------
+reporter: "emoji"

@@ -1,0 +1,34 @@
+## ユーザー設定
+xcuserdata/
+
+## ビルド関連
+DerivedData/
+*.moved-aside
+*.pbxuser
+!default.pbxuser
+
+## Objective-C/Swift固有のファイル
+*.hmap
+
+## パッケージング
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Swift Package Manager
+.build/
+
+# macOSシステムファイル
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# 環境変数とシークレット
+*.env
+*.pem
+*.p12
+*.cer
+*.mobileprovision
+
+# CI/CD output directory
+ci-outputs/ 
