@@ -1,0 +1,42 @@
+name: Format and Lint
+
+on:
+  workflow_call:
+    outputs:
+      result:
+        description: "Check Result"
+        value: ${{ jobs.format-and-lint.outputs.result }}
+
+jobs:
+  format-and-lint:
+    runs-on: macos-latest
+    outputs:
+      result: ${{ steps.result.outputs.status }}
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install dependencies (Mint)
+      run: |
+        brew install mint
+        mint bootstrap
+
+    - name: Run SwiftFormat
+      run: mint run swiftformat .
+
+    - name: Run SwiftLint
+      run: mint run swiftlint --strict
+
+    - name: Check for changes
+      id: check
+      run: |
+        git diff --exit-code && echo "FORMAT_OK=true" >> $GITHUB_ENV || echo "FORMAT_OK=false" >> $GITHUB_ENV
+        
+    - name: Set result
+      id: result
+      run: |
+        if [ "$FORMAT_OK" = "true" ]; then
+          echo "status=success" >> $GITHUB_OUTPUT
+        else
+          echo "コードフォーマットの問題が見つかりました"
+          echo "status=failure" >> $GITHUB_OUTPUT
+        fi 
