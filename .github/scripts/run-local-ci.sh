@@ -134,14 +134,16 @@ fi
 
 # --- UI テスト実行 ---
 echo "Running UI tests"
-xcodebuild test-without-building \
+rm -rf "$TEST_RESULTS_DIR/ui/TestResults.xcresult"
+
+set -o pipefail && xcodebuild test-without-building \
   -project "$PROJECT_FILE" \
   -scheme "$UI_TEST_SCHEME" \
   -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
   -derivedDataPath "$TEST_DERIVED_DATA_DIR" \
   -enableCodeCoverage NO \
   -resultBundlePath "$TEST_RESULTS_DIR/ui/TestResults.xcresult" \
-| xcpretty -c || echo "UI test execution finished with non-zero exit code (ignoring for local check)."
+| xcpretty -c || fail "UI tests failed."
 
 # UI テスト結果バンドルの存在を確認
 echo "Verifying UI test results bundle..."

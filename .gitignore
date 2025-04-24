@@ -31,4 +31,7 @@ DerivedData/
 *.mobileprovision
 
 # CI/CD output directory
-ci-outputs/ 
+ci-outputs/
+
+# UI Test Screenshots
+HelloFrameAnimationUITests/ScreenShots/ 
