@@ -1,0 +1,44 @@
+name: Copilot PR Review
+
+on:
+  workflow_call:
+    inputs:
+      pr_number:
+        description: "Review Target Pull Request Number"
+        required: true
+        type: number
+
+jobs:
+  copilot-review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Request review from Copilot
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            try {
+              await github.rest.pulls.requestReviewers({
+                ...context.repo,
+                pull_number: ${{ inputs.pr_number }},
+                reviewers: ["copilot"]
+              });
+              console.log("Successfully requested review from Copilot");
+            } catch (error) {
+              console.log("Error requesting review from Copilot:", error);
+              
+              // If adding Copilot as a reviewer fails, add a comment explaining why
+              await github.rest.issues.createComment({
+                ...context.repo,
+                issue_number: ${{ inputs.pr_number }},
+                body: "GitHub Copilotによるレビューをリクエストしようとしましたが、エラーが発生しました。リポジトリの設定でGitHub Copilotのコードレビュー機能が有効になっていることを確認してください。\n\nエラー詳細: " + error.message
+              });
+            } 

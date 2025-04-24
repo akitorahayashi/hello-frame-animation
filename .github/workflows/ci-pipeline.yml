@@ -1,0 +1,88 @@
+name: SilentCue CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  # コード品質チェック
+  format-and-lint:
+    name: Code Quality Check
+    uses: ./.github/workflows/code-quality.yml
+    
+  # ビルドとテスト
+  run-ui-test:
+    name: Run Tests
+    uses: ./.github/workflows/run-ui-tests.yml
+    
+  # テスト結果レポート生成
+  report:
+    name: Test Report
+    needs: run-ui-test
+    if: github.event_name == 'pull_request'
+    uses: ./.github/workflows/test-reporter.yml
+    with:
+      pull_request_number: ${{ github.event.pull_request.number }}
+    permissions:
+      checks: write
+      actions: read 
+      pull-requests: write
+    
+  # コードレビュー - PRの場合のみ実行
+  review:
+    name: Code Review
+    needs: run-ui-test
+    if: github.event_name == 'pull_request' && needs.run-ui-test.result == 'success'
+    permissions:
+      pull-requests: write
+      contents: read
+    uses: ./.github/workflows/copilot-review.yml
+    with:
+      pr_number: ${{ github.event.pull_request.number }}
+    secrets: inherit
+    
+  # ビルド完了通知
+  notify:
+    name: Notify Completion
+    runs-on: ubuntu-latest
+    needs: [format-and-lint, run-ui-test, report, review]
+    if: always()
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Determine Status
+        id: status
+        run: |
+          if [[ "${{ needs.run-ui-test.result }}" == "success" ]]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "icon=✅" >> $GITHUB_OUTPUT
+            echo "message=ビルドとテストが成功しました" >> $GITHUB_OUTPUT
+          else
+            echo "status=failure" >> $GITHUB_OUTPUT
+            echo "icon=❌" >> $GITHUB_OUTPUT
+            echo "message=ビルドまたはテストに失敗しました" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Add Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.rest.issues.createComment({
+              ...context.repo,
+              issue_number: context.issue.number,
+              body: `## CI/CD Pipeline Completed ${{ steps.status.outputs.icon }}
+              
+              ${{ steps.status.outputs.message }}
+              
+              ### ステータス概要:
+              - コード品質チェック: ${{ needs.format-and-lint.result == 'success' && '✅' || '❌' }}
+              - ビルドとテスト: ${{ needs.run-ui-test.result == 'success' && '✅' || '❌' }}
+              - テスト結果レポート: ${{ needs.report.result == 'success' && '✅' || (needs.report.result == 'skipped' && '⏭️' || '❌') }}
+              - コードレビュー: ${{ needs.review.result == 'success' && '✅' || (needs.review.result == 'skipped' && '⏭️' || '❌') }}
+            }); 

@@ -1,0 +1,77 @@
+name: Test Reporter
+
+on:
+  workflow_call:
+    inputs:
+      pull_request_number:
+        description: 'Pull Request number'
+        required: true
+        type: number
+
+permissions:
+  checks: write          # JUnitレポートをChecksとして表示するために必要
+  actions: read          # アーティファクトをダウンロードするために必要
+  pull-requests: write   # PRにコメントするために必要
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code # jq を使うためにリポジトリをチェックアウト
+        uses: actions/checkout@v4
+
+      - name: Download test results artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: test-results # run-tests.yml でアップロードされたテスト結果のアーティファクト名
+          path: ./ci-outputs/test-results
+          
+      - name: Publish Test Report as Check
+        uses: mikepenz/action-junit-report@v4
+        # JUnitファイルが存在する場合のみ実行
+        if: ${{ hashFiles('./ci-outputs/test-results/ui/junit.xml') != '' }}
+        with:
+          report_paths: './ci-outputs/test-results/ui/junit.xml'
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          fail_on_failure: false # レポートステップ自体は失敗させない
+          require_tests: false # テストがなくてもエラーにしない
+          check_name: 'Test Suite Results' # Checksタブに表示される名前
+
+      - name: Create or Update PR Comment
+        # Run if test results or any coverage report was found
+        if: ${{ hashFiles('./ci-outputs/test-results/**/*.xml') != '' }}
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const prNumber = ${{ inputs.pull_request_number }};
+            if (!prNumber) {
+              console.error('Could not extract pull request number.');
+              return;
+            }
+
+            const { owner, repo } = context.repo;
+
+            const commentMarker = '<!-- test-and-coverage-report -->';
+            let commentBody = `${commentMarker}\n\n## Test Summary\n\n`;
+            const fs = require('fs');
+
+            // Test Results Summary
+            const uiTestFile = './ci-outputs/test-results/ui/junit.xml';
+            if (fs.existsSync(uiTestFile)) {
+               commentBody += `✅ Test Results: Available in Checks tab.\n`;
+            } else {
+               commentBody += `ℹ️ Test Results: No JUnit reports found.\n`;
+            }
+
+            // 既存コメントの検索・更新 or 新規作成
+            const { data: comments } = await github.rest.issues.listComments({ owner, repo, issue_number: prNumber });
+            const existingComment = comments.find(c => c.user.login === 'github-actions[bot]' && c.body.includes(commentMarker));
+
+            if (existingComment) {
+              console.log(`Updating comment ${existingComment.id} on PR #${prNumber}`);
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existingComment.id, body: commentBody });
+            } else {
+              console.log(`Creating new comment on PR #${prNumber}`);
+              await github.rest.issues.createComment({ owner, repo, issue_number: prNumber, body: commentBody });
+            }
