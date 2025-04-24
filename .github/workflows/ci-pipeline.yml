@@ -16,7 +16,7 @@ jobs:
   # ビルドとテスト
   run-ui-test:
     name: Run Tests
-    uses: ./.github/workflows/run-ui-test.yml
+    uses: ./.github/workflows/run-ui-tests.yml
     
   # テスト結果レポート生成
   report:

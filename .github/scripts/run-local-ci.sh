@@ -7,7 +7,8 @@ OUTPUT_DIR="ci-outputs"
 TEST_RESULTS_DIR="$OUTPUT_DIR/test-results"
 TEST_DERIVED_DATA_DIR="$TEST_RESULTS_DIR/DerivedData"
 PROJECT_FILE="HelloFrameAnimation.xcodeproj"
-UI_TEST_SCHEME="HelloFrameAnimation"
+APP_SCHEME="HelloFrameAnimation"
+UI_TEST_SCHEME="HelloFrameAnimationUITests"
 FIND_SIMULATOR_SCRIPT=".github/scripts/find-simulator.sh"
 
 # === Default Flags ===
@@ -53,7 +54,6 @@ check_command() {
     if [ "$1" == "xcpretty" ]; then
       gem install xcpretty || fail "Failed to install xcpretty. Please install it manually (gem install xcpretty)."
       success "xcpretty installed successfully."
-    # jq のチェックは削除
     else
       fail "Required command '$1' is not installed. Please install it."
     fi
@@ -64,7 +64,6 @@ check_command() {
 
 step "Checking prerequisites"
 check_command xcpretty
-check_command jq
 success "Prerequisites met."
 
 if [ "$skip_build_for_testing" = false ]; then
@@ -120,7 +119,7 @@ if [ "$skip_build_for_testing" = false ]; then
   echo "Building for testing"
   set -o pipefail && xcodebuild build-for-testing \
     -project "$PROJECT_FILE" \
-    -scheme "$UI_TEST_SCHEME" \
+    -scheme "$APP_SCHEME" \
     -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
     -derivedDataPath "$TEST_DERIVED_DATA_DIR" \
     -configuration Debug \
