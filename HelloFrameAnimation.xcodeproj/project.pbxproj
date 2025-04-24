@@ -6,19 +6,55 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		9805141D2DB9DE1D002A5634 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 98DA94002DB9CFA7000410BA /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 98DA94072DB9CFA7000410BA;
+			remoteInfo = HelloFrameAnimation;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
+		980514172DB9DE1D002A5634 /* HelloFrameAnimationUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HelloFrameAnimationUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		98DA94082DB9CFA7000410BA /* HelloFrameAnimation.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HelloFrameAnimation.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		980514272DB9E098002A5634 /* Exceptions for "HelloFrameAnimation" folder in "HelloFrameAnimationUITests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Shared/Constants.swift,
+			);
+			target = 980514162DB9DE1D002A5634 /* HelloFrameAnimationUITests */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		980514182DB9DE1D002A5634 /* HelloFrameAnimationUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = HelloFrameAnimationUITests;
+			sourceTree = "<group>";
+		};
 		98DA940A2DB9CFA7000410BA /* HelloFrameAnimation */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				980514272DB9E098002A5634 /* Exceptions for "HelloFrameAnimation" folder in "HelloFrameAnimationUITests" target */,
+			);
 			path = HelloFrameAnimation;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		980514142DB9DE1D002A5634 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		98DA94052DB9CFA7000410BA /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -33,6 +69,7 @@
 			isa = PBXGroup;
 			children = (
 				98DA940A2DB9CFA7000410BA /* HelloFrameAnimation */,
+				980514182DB9DE1D002A5634 /* HelloFrameAnimationUITests */,
 				98DA94092DB9CFA7000410BA /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +78,7 @@
 			isa = PBXGroup;
 			children = (
 				98DA94082DB9CFA7000410BA /* HelloFrameAnimation.app */,
+				980514172DB9DE1D002A5634 /* HelloFrameAnimationUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -48,6 +86,29 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		980514162DB9DE1D002A5634 /* HelloFrameAnimationUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9805141F2DB9DE1D002A5634 /* Build configuration list for PBXNativeTarget "HelloFrameAnimationUITests" */;
+			buildPhases = (
+				980514132DB9DE1D002A5634 /* Sources */,
+				980514142DB9DE1D002A5634 /* Frameworks */,
+				980514152DB9DE1D002A5634 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				9805141E2DB9DE1D002A5634 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				980514182DB9DE1D002A5634 /* HelloFrameAnimationUITests */,
+			);
+			name = HelloFrameAnimationUITests;
+			packageProductDependencies = (
+			);
+			productName = HelloFrameAnimationUITests;
+			productReference = 980514172DB9DE1D002A5634 /* HelloFrameAnimationUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 		98DA94072DB9CFA7000410BA /* HelloFrameAnimation */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 98DA94162DB9CFA8000410BA /* Build configuration list for PBXNativeTarget "HelloFrameAnimation" */;
@@ -80,6 +141,10 @@
 				LastSwiftUpdateCheck = 1620;
 				LastUpgradeCheck = 1620;
 				TargetAttributes = {
+					980514162DB9DE1D002A5634 = {
+						CreatedOnToolsVersion = 16.2;
+						TestTargetID = 98DA94072DB9CFA7000410BA;
+					};
 					98DA94072DB9CFA7000410BA = {
 						CreatedOnToolsVersion = 16.2;
 					};
@@ -100,11 +165,19 @@
 			projectRoot = "";
 			targets = (
 				98DA94072DB9CFA7000410BA /* HelloFrameAnimation */,
+				980514162DB9DE1D002A5634 /* HelloFrameAnimationUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		980514152DB9DE1D002A5634 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		98DA94062DB9CFA7000410BA /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -115,6 +188,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		980514132DB9DE1D002A5634 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		98DA94042DB9CFA7000410BA /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -124,7 +204,49 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		9805141E2DB9DE1D002A5634 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 98DA94072DB9CFA7000410BA /* HelloFrameAnimation */;
+			targetProxy = 9805141D2DB9DE1D002A5634 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		980514202DB9DE1D002A5634 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 2A7R4ZP8WU;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.akitorahayashi.HelloFrameAnimationUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = HelloFrameAnimation;
+			};
+			name = Debug;
+		};
+		980514212DB9DE1D002A5634 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 2A7R4ZP8WU;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.akitorahayashi.HelloFrameAnimationUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = HelloFrameAnimation;
+			};
+			name = Release;
+		};
 		98DA94142DB9CFA8000410BA /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -303,6 +425,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		9805141F2DB9DE1D002A5634 /* Build configuration list for PBXNativeTarget "HelloFrameAnimationUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				980514202DB9DE1D002A5634 /* Debug */,
+				980514212DB9DE1D002A5634 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		98DA94032DB9CFA7000410BA /* Build configuration list for PBXProject "HelloFrameAnimation" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

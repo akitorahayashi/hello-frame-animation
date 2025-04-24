@@ -1,18 +1,6 @@
 import SwiftUI
 
 struct ContentView: View {
-    private struct DesignConstants {
-        static let lineWidth: CGFloat = 3
-        static let gradientColors: [Color] = [.pink, .purple, .cyan]
-    }
-
-    private struct AnimationConstants {
-        static let duration: Double = 5.3
-        static let animationDelay: Double = 6.0
-        static let startTrim: CGFloat = 0.0
-        static let endTrim: CGFloat = 1.0
-    }
-
     @State private var drawProgress: CGFloat = AnimationConstants.startTrim
     @State private var isAnimatingForward = true
     @State private var isAnimating = false
