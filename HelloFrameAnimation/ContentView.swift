@@ -13,8 +13,9 @@ struct ContentView: View {
         static let endTrim: CGFloat = 1.0
     }
 
-    @State private var drawProgress: CGFloat = AnimationConstants.endTrim
+    @State private var drawProgress: CGFloat = AnimationConstants.startTrim
     @State private var isAnimatingForward = true
+    @State private var isAnimating = false
 
     var body: some View {
         GeometryReader { geometry in
@@ -29,9 +30,6 @@ struct ContentView: View {
                     style: StrokeStyle(lineWidth: DesignConstants.lineWidth, lineCap: .round, lineJoin: .round)
                 )
                 .frame(width: geometry.size.width, height: geometry.size.height)
-                .onAppear {
-                    startAnimation()
-                }
                 .onChange(of: drawProgress) { oldValue, newValue in
                     if newValue == AnimationConstants.endTrim && isAnimatingForward {
                         DispatchQueue.main.asyncAfter(deadline: .now() + AnimationConstants.animationDelay) {
@@ -42,6 +40,16 @@ struct ContentView: View {
                         }
                     } else if newValue == AnimationConstants.startTrim && !isAnimatingForward {
                          isAnimatingForward = true
+                         isAnimating = false
+                    }
+                }
+                .contentShape(Rectangle())
+                .onAppear {
+                    startAnimation()
+                }
+                .onTapGesture {
+                    if !isAnimating {
+                        startAnimation()
                     }
                 }
         }
@@ -49,10 +57,11 @@ struct ContentView: View {
 
     // アニメーションを開始する関数
     func startAnimation() {
-        if drawProgress == AnimationConstants.endTrim {
-           drawProgress = AnimationConstants.startTrim
-        }
-        isAnimatingForward = true
+        guard !isAnimating else { return }
+
+        isAnimating = true
+        drawProgress = AnimationConstants.startTrim
+
         // アニメーションで描画を進める
         withAnimation(.easeInOut(duration: AnimationConstants.duration)) {
             drawProgress = AnimationConstants.endTrim
