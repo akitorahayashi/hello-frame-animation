@@ -26,30 +26,13 @@ jobs:
     - name: Create Test Output Directories
       run: mkdir -p ci-outputs/test-results/ui ci-outputs/test-results/derived-data
         
+    - name: Make find-simulator script executable
+      run: chmod +x .github/scripts/find-simulator.sh
+
     - name: Select Simulator
       id: select_simulator
       run: |
-        SIMULATOR_NAME_PATTERN="iPhone"
-        echo "Searching for valid '$SIMULATOR_NAME_PATTERN' simulator..."
-        SIMCTL_OUTPUT=$(xcrun simctl list devices available --json)
-        if [ -z "$SIMCTL_OUTPUT" ]; then
-            echo "エラー: xcrun simctl が空の出力を返しました。" >&2
-            exit 1
-        fi
-
-        echo "simctl 出力を解析中..."
-        SIMULATOR_ID=$(echo "$SIMCTL_OUTPUT" | jq -r --arg pattern "$SIMULATOR_NAME_PATTERN" \\
-          '.devices | to_entries[] | select(.key | startswith("com.apple.CoreSimulator.SimRuntime.iOS")) | .value[] | select(.isAvailable == true and (.name | contains($pattern))) | .udid' | head -n 1)
-
-        if [ -z "$SIMULATOR_ID" ]; then
-            echo "エラー: パターン '$SIMULATOR_NAME_PATTERN' に一致する利用可能なシミュレーターが見つかりませんでした。" >&2
-            echo "Full simctl output:\\n$SIMCTL_OUTPUT" >&2
-            exit 1
-        fi
-
-        SIMULATOR_NAME=$(echo "$SIMCTL_OUTPUT" | jq -r --arg udid "$SIMULATOR_ID" '.devices | .[] | .[] | select(.udid == $udid) | .name' | head -n 1 || echo "名前取得不可")
-
-        echo "Found simulator: $SIMULATOR_NAME (ID: $SIMULATOR_ID)"
+        SIMULATOR_ID=$(./.github/scripts/find-simulator.sh)
         echo "シミュレータ ID ($SIMULATOR_ID) が選択されました"
         echo "simulator_id=$SIMULATOR_ID" >> $GITHUB_OUTPUT
 

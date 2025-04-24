@@ -64,6 +64,7 @@ check_command() {
 
 step "Checking prerequisites"
 check_command xcpretty
+check_command jq
 success "Prerequisites met."
 
 if [ "$skip_build_for_testing" = false ]; then
@@ -82,36 +83,36 @@ else
   success "Required test directories exist or created."
 fi
 
-# --- Find Simulator ---
-step "Finding suitable iOS Simulator"
+# --- Find Simulator using external script ---
+step "Finding suitable iOS Simulator via $FIND_SIMULATOR_SCRIPT"
 
-SIMULATOR_NAME_PATTERN="iPhone"
-echo "Searching for valid '$SIMULATOR_NAME_PATTERN' simulator..."
-SIMCTL_OUTPUT=$(xcrun simctl list devices available --json)
-if [ $? -ne 0 ]; then
-    fail "xcrun simctl からシミュレーターリストの取得に失敗しました。"
-fi
-if [ -z "$SIMCTL_OUTPUT" ]; then
-    fail "xcrun simctl が空の出力を返しました。"
+# スクリプトが実行可能であることを確認
+if [ ! -x "$FIND_SIMULATOR_SCRIPT" ]; then
+  echo "Making $FIND_SIMULATOR_SCRIPT executable..."
+  chmod +x "$FIND_SIMULATOR_SCRIPT"
+  if [ $? -ne 0 ]; then
+      fail "Failed to make $FIND_SIMULATOR_SCRIPT executable."
+  fi
 fi
 
-echo "simctl 出力を解析中..."
-SIMULATOR_ID=$(echo "$SIMCTL_OUTPUT" | jq -r --arg pattern "$SIMULATOR_NAME_PATTERN" \
-  '.devices | to_entries[] | select(.key | startswith("com.apple.CoreSimulator.SimRuntime.iOS")) | .value[] | select(.isAvailable == true and (.name | contains($pattern))) | .udid' | head -n 1)
+# スクリプトを実行し、出力をキャプチャ (シミュレータ ID)
+SIMULATOR_ID=$("$FIND_SIMULATOR_SCRIPT")
+SCRIPT_EXIT_CODE=$?
+
+if [ $SCRIPT_EXIT_CODE -ne 0 ]; then
+    fail "$FIND_SIMULATOR_SCRIPT failed with exit code $SCRIPT_EXIT_CODE."
+fi
 
 if [ -z "$SIMULATOR_ID" ]; then
-    echo "エラー: パターン '$SIMULATOR_NAME_PATTERN' に一致する利用可能なシミュレーターが見つかりませんでした。" >&2
-    echo "Full simctl output:\n$SIMCTL_OUTPUT" >&2
-    fail "Failed to find a suitable simulator."
+    fail "$FIND_SIMULATOR_SCRIPT did not output a simulator ID."
 fi
 
-SIMULATOR_NAME=$(echo "$SIMCTL_OUTPUT" | jq -r --arg udid "$SIMULATOR_ID" '.devices | .[] | .[] | select(.udid == $udid) | .name' | head -n 1 || echo "名前取得不可")
-
-echo "Found simulator: $SIMULATOR_NAME (ID: $SIMULATOR_ID)"
+# Note: find-simulator.sh 内で ID と名前は stderr に出力される
+# ここでは ID の取得と destination 文字列の作成に集中
 
 SIMULATOR_DESTINATION="id=$SIMULATOR_ID"
 
-echo "Using Simulator Destination: $SIMULATOR_DESTINATION"
+echo "Using Simulator Destination: $SIMULATOR_DESTINATION (obtained from $FIND_SIMULATOR_SCRIPT)"
 success "Simulator destination set."
 
 # テスト用にビルド
