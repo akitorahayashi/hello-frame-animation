@@ -2,7 +2,8 @@
 
 ## ファイル構成
 
-- **`ci-pipeline.yml`**: メインとなる統合CI/CDパイプラインですPull Request作成時やmainブランチへのプッシュ時にトリガーされ、後述の他のワークフローを順次実行します
+- **`ci-pipeline.yml`**: メインとなる統合CI/CDパイプラインです
+Pull Request作成時やmainブランチへのプッシュ時にトリガーされ、後述の他のワークフローを順次実行します
 - **`run-ui-test.yml`**: アプリのビルドとUIテストを実行する再利用可能ワークフロー`.github/scripts/` 配下の関数定義ファイルを `source` し、必要な関数（シミュレータ選択、ビルド、テスト実行、結果検証など）を直接呼び出します
 - **`code-quality.yml`**: コード品質チェック（SwiftFormat, SwiftLint）を実行します
 - **`test-reporter.yml`**: テスト結果のレポートを作成し、PRにコメントします

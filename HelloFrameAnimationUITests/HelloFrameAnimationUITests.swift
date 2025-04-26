@@ -1,76 +1,133 @@
 import XCTest
 
 final class HelloFrameAnimationUITests: XCTestCase {
-    var app: XCUIApplication?
+    
+    var app: XCUIApplication!
+
+    // スクリーンショットのベースディレクトリ
+    static let screenshotsBaseDirectory = URL(fileURLWithPath: #file)
+        .deletingLastPathComponent()
+        .appendingPathComponent("ScreenShots")
+
+    // テスト結果を保存するディレクトリ
+    static let testResultsDirectory = screenshotsBaseDirectory
+
+    enum AnimationPhase: String, CaseIterable {
+        case going = "Going"
+        case returning = "Return"
+        func directory(baseURL: URL) -> URL {
+            baseURL.appendingPathComponent(self.rawValue)
+        }
+    }
+
+    struct CaptureStep {
+        let step: Int
+        let namePart: String
+        let isStart: Bool
+
+        static let sequence: [CaptureStep] = [
+            CaptureStep(step: 0, namePart: "Start", isStart: true),
+            CaptureStep(step: 1, namePart: "Quarter", isStart: false),
+            CaptureStep(step: 2, namePart: "Midpoint", isStart: false),
+            CaptureStep(step: 3, namePart: "ThreeQuarter", isStart: false),
+            CaptureStep(step: 4, namePart: "End", isStart: false),
+        ]
+    }
 
     override func setUp() {
         super.setUp()
         continueAfterFailure = false
 
         app = XCUIApplication()
-        app?.launch()
+
+        let fileManager = FileManager.default
+
+        // 各フェーズのディレクトリを準備
+        for phase in AnimationPhase.allCases {
+            let subDirURL = phase.directory(baseURL: Self.testResultsDirectory)
+            // 既存ディレクトリがあれば削除（テスト実行前のクリーンアップ）
+            if fileManager.fileExists(atPath: subDirURL.path) {
+                do {
+                    try fileManager.removeItem(at: subDirURL)
+                    print("既存の \(phase.rawValue) ディレクトリを削除しました: \(subDirURL.path)")
+                } catch {
+                    XCTFail("既存の \(phase.rawValue) ディレクトリの削除に失敗: \(error)")
+                }
+            }
+            // ディレクトリ作成
+            do {
+                try fileManager.createDirectory(at: subDirURL, withIntermediateDirectories: true, attributes: nil)
+            } catch {
+                XCTFail("\(phase.rawValue) ディレクトリの作成に失敗: \(error)")
+            }
+        }
+        print("スクリーンショット用ディレクトリ構造を作成しました: \(Self.testResultsDirectory.path)")
+
+        app.launch()
 
         XCUIDevice.shared.orientation = .landscapeRight
     }
 
     override func tearDown() {
-        app?.terminate()
+        app.terminate()
         app = nil
         super.tearDown()
     }
 
     @MainActor
-    func testHelloAnimationScreenshots() throws {
-        // 保存先ディレクトリのパスを設定
-        let screenshotsDirectory = URL(fileURLWithPath: #file)
-            .deletingLastPathComponent() // HelloFrameAnimationUITests.swift
-            .appendingPathComponent("ScreenShots")
+    func testAnimationCycleAndRestart() throws {
+        var generatedFileNames: [AnimationPhase: [String]] = [:]
 
-        // ディレクトリが存在しない場合は作成
-        try? FileManager.default.createDirectory(
-            at: screenshotsDirectory,
-            withIntermediateDirectories: true,
-            attributes: nil
-        )
+        func captureAndSave(name: String, in directory: URL) {
+            // アプリのメインウィンドウのスクリーンショットを取得
+            let screenshot = app.windows.firstMatch.screenshot()
+            saveScreenshotAndAttachment(named: name, screenshot: screenshot, in: directory)
+        }
 
-        // 最初のアニメーションが中間点に達するまで待機
-        sleep(UInt32(AnimationConstants.duration + 0.5))
+        let duration = AnimationConstants.duration
+        let delay = AnimationConstants.animationDelay
 
-        // 最初のスクリーンショットを撮影
-        let screenshot1 = XCUIScreen.main.screenshot()
-        let attachment1 = XCTAttachment(screenshot: screenshot1)
-        attachment1.name = "Midpoint_Initial_LandscapeRight"
-        attachment1.lifetime = .keepAlways
-        add(attachment1)
+        func executePhase(_ phase: AnimationPhase) {
+            let targetDirectory = phase.directory(baseURL: Self.testResultsDirectory)
 
-        // スクリーンショットをファイルに保存
-        saveScreenshotAndAttachment(
-            named: attachment1.name ?? "screenshot1",
-            screenshot: screenshot1,
-            in: screenshotsDirectory
-        )
+            var currentPhaseFileNames: [String] = []
 
-        sleep(UInt32(AnimationConstants.duration + AnimationConstants.animationDelay))
+            let timeFractions: [Double] = [0.0, 0.25, 0.5, 0.75, 1.0]
 
-        // 画面をタップしてアニメーションを再開
-        app?.windows.firstMatch.tap()
+            guard timeFractions.count == CaptureStep.sequence.count else {
+                XCTFail("timeFractions count does not match CaptureStep sequence count.")
+                return
+            }
 
-        // 再開されたアニメーションが中間点に達するまで待機
-        sleep(UInt32(AnimationConstants.duration))
+            var previousTargetElapsedTime: Double = 0.0
 
-        // 2番目のスクリーンショットを撮影
-        let screenshot2 = XCUIScreen.main.screenshot()
-        let attachment2 = XCTAttachment(screenshot: screenshot2)
-        attachment2.name = "Midpoint_Restarted_LandscapeRight"
-        attachment2.lifetime = .keepAlways
-        add(attachment2)
+            for (index, stepConfig) in CaptureStep.sequence.enumerated() {
+                let targetElapsedTime = duration * timeFractions[index]
+                let relativeWaitTime = targetElapsedTime - previousTargetElapsedTime
 
-        // スクリーンショットをファイルに保存
-        saveScreenshotAndAttachment(
-            named: attachment2.name ?? "screenshot2",
-            screenshot: screenshot2,
-            in: screenshotsDirectory
-        )
+                if relativeWaitTime > 0.001 {
+                    usleep(useconds_t(relativeWaitTime * 1_000_000))
+                }
+
+                let screenshotName = "\(stepConfig.step)_\(phase.rawValue)_\(stepConfig.namePart)"
+                captureAndSave(name: screenshotName, in: targetDirectory)
+                currentPhaseFileNames.append(screenshotName)
+                previousTargetElapsedTime = targetElapsedTime
+            }
+
+            generatedFileNames[phase] = currentPhaseFileNames
+        }
+
+        // アニメーションを開始
+        app.windows.firstMatch.tap()
+
+        executePhase(.going)
+
+        sleep(UInt32(delay))
+
+        executePhase(.returning)
+
+        sleep(1)
     }
 
     private func saveScreenshotAndAttachment(named name: String, screenshot: XCUIScreenshot, in directory: URL) {

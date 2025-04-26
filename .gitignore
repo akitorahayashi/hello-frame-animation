@@ -29,6 +29,7 @@ DerivedData/
 *.p12
 *.cer
 *.mobileprovision
+/.cursor/
 
 # CI/CD output directory
 ci-outputs/

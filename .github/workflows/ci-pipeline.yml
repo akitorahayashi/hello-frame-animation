@@ -1,4 +1,4 @@
-name: SilentCue CI/CD Pipeline
+name: HelloFrameAnimation CI Pipeline
 
 on:
   push:
@@ -73,16 +73,18 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            const body = `## CI/CD Pipeline Completed ${{ steps.status.outputs.icon }}
+
+            ${{ steps.status.outputs.message }}
+
+            ### ステータス概要:
+            - コード品質チェック: ${{ needs.format-and-lint.result == 'success' && '✅' || '❌' }}
+            - ビルドとテスト: ${{ needs.run-ui-test.result == 'success' && '✅' || '❌' }}
+            - テスト結果レポート: ${{ needs.report.result == 'success' && '✅' || (needs.report.result == 'skipped' && '⏭️' || '❌') }}
+            - コードレビュー: ${{ needs.review.result == 'success' && '✅' || (needs.review.result == 'skipped' && '⏭️' || '❌') }}`;
+
             github.rest.issues.createComment({
               ...context.repo,
               issue_number: context.issue.number,
-              body: `## CI/CD Pipeline Completed ${{ steps.status.outputs.icon }}
-              
-              ${{ steps.status.outputs.message }}
-              
-              ### ステータス概要:
-              - コード品質チェック: ${{ needs.format-and-lint.result == 'success' && '✅' || '❌' }}
-              - ビルドとテスト: ${{ needs.run-ui-test.result == 'success' && '✅' || '❌' }}
-              - テスト結果レポート: ${{ needs.report.result == 'success' && '✅' || (needs.report.result == 'skipped' && '⏭️' || '❌') }}
-              - コードレビュー: ${{ needs.review.result == 'success' && '✅' || (needs.review.result == 'skipped' && '⏭️' || '❌') }}
-            }); 
+              body: body
+            }) 
