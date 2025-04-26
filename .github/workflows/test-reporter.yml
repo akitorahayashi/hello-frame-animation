@@ -31,7 +31,7 @@ jobs:
         # JUnitファイルが存在する場合のみ実行
         if: ${{ hashFiles('./ci-outputs/test-results/ui/junit.xml') != '' }}
         with:
-          report_paths: './ci-outputs/test-results/ui/junit.xml'
+          report_paths: './ci-outputs/test-results/ui/*.xml'
           github_token: ${{ secrets.GITHUB_TOKEN }}
           fail_on_failure: false # レポートステップ自体は失敗させない
           require_tests: false # テストがなくてもエラーにしない
