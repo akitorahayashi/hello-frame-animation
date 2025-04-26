@@ -47,7 +47,7 @@ jobs:
           -project "HelloFrameAnimation.xcodeproj" \
           -scheme "HelloFrameAnimation" \
           -destination "platform=iOS Simulator,id=${{ steps.select_simulator.outputs.simulator_id }}" \
-          -derivedDataPath ./ci-outputs/test-results/derived-data \
+          -derivedDataPath ./ci-outputs/test-results/DerivedData \
           -configuration Debug \
           -skipMacroValidation \
           CODE_SIGNING_ALLOWED=NO \
