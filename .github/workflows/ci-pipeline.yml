@@ -1,4 +1,4 @@
-name: SilentCue CI/CD Pipeline
+name: HelloFrameAnimation CI Pipeline
 
 on:
   push:
