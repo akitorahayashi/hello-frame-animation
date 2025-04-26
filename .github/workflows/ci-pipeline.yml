@@ -85,4 +85,4 @@ jobs:
               - ビルドとテスト: ${{ needs.run-ui-test.result == 'success' && '✅' || '❌' }}
               - テスト結果レポート: ${{ needs.report.result == 'success' && '✅' || (needs.report.result == 'skipped' && '⏭️' || '❌') }}
               - コードレビュー: ${{ needs.review.result == 'success' && '✅' || (needs.review.result == 'skipped' && '⏭️' || '❌') }}
-            }); 
+            }) 
