@@ -7,30 +7,37 @@ struct ContentView: View {
 
     var body: some View {
         GeometryReader { geometry in
-            HelloPath()
-                .trim(from: AnimationConstants.startTrim, to: drawProgress)
-                .stroke(
-                    LinearGradient(
-                        gradient: Gradient(colors: DesignConstants.gradientColors),
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    ),
-                    style: StrokeStyle(lineWidth: DesignConstants.lineWidth, lineCap: .round, lineJoin: .round)
-                )
-                .frame(width: geometry.size.width, height: geometry.size.height)
-                .contentShape(Rectangle())
-                .onAppear {
-                    print("\(CFAbsoluteTimeGetCurrent()): onAppear - Calling startAnimation.")
-                    startAnimation()
-                }
-                .onTapGesture {
-                    let time = CFAbsoluteTimeGetCurrent()
-                    print("\(time): onTapGesture - Tap detected. isAnimating: \(isAnimating)")
-                    if !isAnimating {
-                        print("\(time): onTapGesture - Calling startAnimation.")
-                        startAnimation()
+            ZStack {
+                HelloPath()
+                    .trim(from: AnimationConstants.startTrim, to: drawProgress)
+                    .stroke(
+                        LinearGradient(
+                            gradient: Gradient(colors: DesignConstants.gradientColors),
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        ),
+                        style: StrokeStyle(lineWidth: DesignConstants.lineWidth, lineCap: .round, lineJoin: .round)
+                    )
+                    .frame(width: geometry.size.width, height: geometry.size.height)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        let time = CFAbsoluteTimeGetCurrent()
+                        print("\(time): onTapGesture - Tap detected. isAnimating: \(isAnimating)")
+                        if !isAnimating {
+                            print("\(time): onTapGesture - Calling startAnimation.")
+                            startAnimation()
+                        }
                     }
+
+                if !isAnimating {
+                    Text("画面をこちらの向きにしてタップしてください")
+                        .font(.subheadline)
+                        .foregroundColor(.gray)
+                        .padding(.top, 50)
+                        .transition(.opacity)
                 }
+            }
+            .frame(width: geometry.size.width, height: geometry.size.height)
         }
     }
 
@@ -43,7 +50,9 @@ struct ContentView: View {
         }
 
         print("\(startTime): startAnimation - Starting forward animation. Setting isAnimating=true, drawProgress=startTrim.")
-        isAnimating = true
+        withAnimation {
+            isAnimating = true
+        }
         isAnimatingForward = true
         drawProgress = AnimationConstants.startTrim
 
@@ -80,7 +89,9 @@ struct ContentView: View {
                     let returnEndTime = CFAbsoluteTimeGetCurrent()
                     print("\(returnEndTime): Return animation visually completed. Animation cycle complete.")
                     isAnimatingForward = true
-                    isAnimating = false
+                    withAnimation {
+                        isAnimating = false
+                    }
                 }
             }
         }

@@ -4,10 +4,17 @@ final class HelloFrameAnimationUITests: XCTestCase {
     
     var app: XCUIApplication!
 
-    enum AnimationPhase: String {
+    // スクリーンショットのベースディレクトリ
+    static let screenshotsBaseDirectory = URL(fileURLWithPath: #file)
+        .deletingLastPathComponent()
+        .appendingPathComponent("ScreenShots")
+
+    // テスト結果を保存するディレクトリ
+    static let testResultsDirectory = screenshotsBaseDirectory
+
+    enum AnimationPhase: String, CaseIterable {
         case going = "Going"
         case returning = "Return"
-        case restarting = "Restart"
         func directory(baseURL: URL) -> URL {
             baseURL.appendingPathComponent(self.rawValue)
         }
@@ -32,6 +39,30 @@ final class HelloFrameAnimationUITests: XCTestCase {
         continueAfterFailure = false
 
         app = XCUIApplication()
+
+        let fileManager = FileManager.default
+
+        // 各フェーズのディレクトリを準備
+        for phase in AnimationPhase.allCases {
+            let subDirURL = phase.directory(baseURL: Self.testResultsDirectory)
+            // 既存ディレクトリがあれば削除（テスト実行前のクリーンアップ）
+            if fileManager.fileExists(atPath: subDirURL.path) {
+                do {
+                    try fileManager.removeItem(at: subDirURL)
+                    print("既存の \(phase.rawValue) ディレクトリを削除しました: \(subDirURL.path)")
+                } catch {
+                    XCTFail("既存の \(phase.rawValue) ディレクトリの削除に失敗: \(error)")
+                }
+            }
+            // ディレクトリ作成
+            do {
+                try fileManager.createDirectory(at: subDirURL, withIntermediateDirectories: true, attributes: nil)
+            } catch {
+                XCTFail("\(phase.rawValue) ディレクトリの作成に失敗: \(error)")
+            }
+        }
+        print("スクリーンショット用ディレクトリ構造を作成しました: \(Self.testResultsDirectory.path)")
+
         app.launch()
 
         XCUIDevice.shared.orientation = .landscapeRight
@@ -45,110 +76,60 @@ final class HelloFrameAnimationUITests: XCTestCase {
 
     @MainActor
     func testAnimationCycleAndRestart() throws {
-        let baseScreenshotsDir = URL(fileURLWithPath: #file)
-            .deletingLastPathComponent()
-            .appendingPathComponent("ScreenShots")
+        var generatedFileNames: [AnimationPhase: [String]] = [:]
 
-        // --- ディレクトリ作成 ---
-        let phases: [AnimationPhase] = [.going, .returning, .restarting]
-        for phase in phases {
-            let dir = phase.directory(baseURL: baseScreenshotsDir)
-            do {
-                try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true, attributes: nil)
-            } catch {
-                XCTFail("Failed to create screenshot subdirectory for \(phase): \(error)")
-            }
-        }
-
-        // スクリーンショットを作成し、保存する
         func captureAndSave(name: String, in directory: URL) {
-            let screenshot = XCUIScreen.main.screenshot()
+            // アプリのメインウィンドウのスクリーンショットを取得
+            let screenshot = app.windows.firstMatch.screenshot()
             saveScreenshotAndAttachment(named: name, screenshot: screenshot, in: directory)
         }
 
-        // アニメーション時間を取得 (仮の値、必要に応じて調整)
-        // AnimationConstantsが参照できない場合、適切な値を設定してください
-        // *** 重要: Going と Return で duration や delay、イージングが異なる場合、***
-        // *** 以下の値や executePhase 内の計算が Return フェーズで正しく機能しない可能性があります。***
-        // *** アプリ本体のアニメーション実装を確認してください。***
         let duration = AnimationConstants.duration
         let delay = AnimationConstants.animationDelay
 
-        // --- アニメーションフェーズの実行 ---
         func executePhase(_ phase: AnimationPhase) {
-            let dir = phase.directory(baseURL: baseScreenshotsDir)
-            var lastCaptureTime = CFAbsoluteTimeGetCurrent() // 前回のキャプチャ（またはフェーズ開始）時刻
+            let targetDirectory = phase.directory(baseURL: Self.testResultsDirectory)
 
-            // フェーズごとにキャプチャする時間の割合を定義
-            let timeFractions: [Double]
-            switch phase {
-                case .returning: // Return用に割合を調整 (Goingと見た目の進行が違う場合)
-                    // 例: 少し早めにキャプチャするように調整
-                    timeFractions = [0.0, 0.2, 0.45, 0.7, 1.0]
-                    // または例: 少し遅めにキャプチャするように調整
-                    // timeFractions = [0.0, 0.3, 0.55, 0.8, 1.0]
-                default: // Going, Restarting (およびデフォルト) は均等割
-                    timeFractions = [0.0, 0.25, 0.5, 0.75, 1.0]
-            }
+            var currentPhaseFileNames: [String] = []
+
+            let timeFractions: [Double] = [0.0, 0.25, 0.5, 0.75, 1.0]
 
             guard timeFractions.count == CaptureStep.sequence.count else {
                 XCTFail("timeFractions count does not match CaptureStep sequence count.")
                 return
             }
 
+            var previousTargetElapsedTime: Double = 0.0
+
             for (index, stepConfig) in CaptureStep.sequence.enumerated() {
-                // 各ステップの目標経過時間 (フェーズ開始からの絶対時間)
-                let targetAbsoluteTime = lastCaptureTime + (duration * timeFractions[index])
+                let targetElapsedTime = duration * timeFractions[index]
+                let relativeWaitTime = targetElapsedTime - previousTargetElapsedTime
 
-                // 現在時刻と目標時刻までの待機時間を計算
-                let currentTime = CFAbsoluteTimeGetCurrent()
-                let waitTime = targetAbsoluteTime - currentTime
-
-                // 目標時刻まで待機
-                if waitTime > 0.001 { // 1ms以上の待機時間
-                    usleep(useconds_t(waitTime * 1_000_000))
-                }
-                // else { print("waitTime was too short or negative for step \(index): \(waitTime)") } // デバッグ用
-
-                // スクリーンショット名の生成
-                var screenshotName: String
-                switch (phase, stepConfig.step) {
-                    case (.going, 0): screenshotName = "0_Initial"
-                    case (.returning, 0): screenshotName = "0_Return_Start"
-                    case (.restarting, 0): screenshotName = "0_Restart_Start"
-                    default:
-                        screenshotName = "\(stepConfig.step)_\(phase.rawValue)_\(stepConfig.namePart)"
+                if relativeWaitTime > 0.001 {
+                    usleep(useconds_t(relativeWaitTime * 1_000_000))
                 }
 
-                captureAndSave(name: screenshotName, in: dir)
-                lastCaptureTime = CFAbsoluteTimeGetCurrent() // 今回のキャプチャ時刻を記録
+                let screenshotName = "\(stepConfig.step)_\(phase.rawValue)_\(stepConfig.namePart)"
+                captureAndSave(name: screenshotName, in: targetDirectory)
+                currentPhaseFileNames.append(screenshotName)
+                previousTargetElapsedTime = targetElapsedTime
             }
+
+            generatedFileNames[phase] = currentPhaseFileNames
         }
 
-        // --- テストシーケンス ---
+        // アニメーションを開始
+        app.windows.firstMatch.tap()
+
         executePhase(.going)
 
-        sleep(UInt32(delay)) // 休憩
-
-        // Debug: delay直後、Returnフェーズ開始前の状態をキャプチャ
-        do {
-            let debugDir = baseScreenshotsDir.appendingPathComponent("Debug")
-            try FileManager.default.createDirectory(at: debugDir, withIntermediateDirectories: true, attributes: nil)
-            captureAndSave(name: "DEBUG_AfterDelay_BeforeReturn", in: debugDir)
-        } catch {
-            print("Failed to capture debug screenshot: \(error)") // エラー処理を追加
-        }
+        sleep(UInt32(delay))
 
         executePhase(.returning)
 
-        app.windows.firstMatch.tap() // タップ
-        executePhase(.restarting)
-
-        // 終了
         sleep(1)
     }
 
-    // スクリーンショット保存の共通ロジック
     private func saveScreenshotAndAttachment(named name: String, screenshot: XCUIScreenshot, in directory: URL) {
         let attachment = XCTAttachment(screenshot: screenshot)
         attachment.name = name
