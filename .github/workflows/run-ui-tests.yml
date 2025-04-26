@@ -67,13 +67,17 @@ jobs:
           -derivedDataPath ./ci-outputs/test-results/DerivedData \
           -enableCodeCoverage NO \
           -resultBundlePath ./ci-outputs/test-results/ui/TestResults.xcresult \
-          | xcbeautify --report junit --report-path ./ci-outputs/test-results/ui/junit.xml
+          | xcbeautify --report junit --report-path ./ci-outputs/test-results/ui/
           
         # Capture the exit status of xcodebuild (first command in the pipe)
         XCODEBUILD_EXIT_CODE=${PIPESTATUS[0]}
         echo "UI_TEST_XCODEBUILD_STATUS=$XCODEBUILD_EXIT_CODE" >> $GITHUB_ENV
         ls -la ./ci-outputs/test-results/ui/
       continue-on-error: false
+
+    - name: Rename JUnit Report
+      run: mv ./ci-outputs/test-results/ui/report.junit ./ci-outputs/test-results/ui/junit.xml
+      if: hashFiles('./ci-outputs/test-results/ui/report.junit') != ''
 
     - name: Verify UI Test Results
       run: |

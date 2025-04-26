@@ -25,13 +25,13 @@ jobs:
         with:
           name: test-results # run-tests.yml でアップロードされたテスト結果のアーティファクト名
           path: ./ci-outputs/test-results
-          
+
       - name: Publish Test Report as Check
         uses: mikepenz/action-junit-report@v4
         # JUnitファイルが存在する場合のみ実行
-        if: ${{ hashFiles('./ci-outputs/test-results/ui/junit.xml') != '' }}
+        if: ${{ hashFiles('./ci-outputs/test-results/unit/junit.xml') != '' || hashFiles('./ci-outputs/test-results/ui/junit.xml') != '' }}
         with:
-          report_paths: './ci-outputs/test-results/ui/*.xml'
+          report_paths: './ci-outputs/test-results/unit/junit.xml,./ci-outputs/test-results/ui/junit.xml' # Specify both unit and ui paths
           github_token: ${{ secrets.GITHUB_TOKEN }}
           fail_on_failure: false # レポートステップ自体は失敗させない
           require_tests: false # テストがなくてもエラーにしない
@@ -56,9 +56,10 @@ jobs:
             let commentBody = `${commentMarker}\n\n## Test Summary\n\n`;
             const fs = require('fs');
 
-            // Test Results Summary
+            // Test Results Summary - Check for both unit and ui tests
+            const unitTestFile = './ci-outputs/test-results/unit/junit.xml';
             const uiTestFile = './ci-outputs/test-results/ui/junit.xml';
-            if (fs.existsSync(uiTestFile)) {
+            if (fs.existsSync(unitTestFile) || fs.existsSync(uiTestFile)) {
                commentBody += `✅ Test Results: Available in Checks tab.\n`;
             } else {
                commentBody += `ℹ️ Test Results: No JUnit reports found.\n`;
