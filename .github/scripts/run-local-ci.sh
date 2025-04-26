@@ -48,23 +48,7 @@ fail() {
   exit 1
 }
 
-check_command() {
-  if ! command -v $1 &> /dev/null; then
-    echo "⚠️ Warning: '$1' command not found. Attempting to install..." >&2
-    if [ "$1" == "xcpretty" ]; then
-      gem install xcpretty || fail "Failed to install xcpretty. Please install it manually (gem install xcpretty)."
-      success "xcpretty installed successfully."
-    else
-      fail "Required command '$1' is not installed. Please install it."
-    fi
-  fi
-}
-
 # === Main Script ===
-
-step "Checking prerequisites"
-check_command xcpretty
-success "Prerequisites met."
 
 if [ "$skip_build_for_testing" = false ]; then
   step "Cleaning previous outputs and creating directories for UI Tests"
@@ -125,7 +109,7 @@ if [ "$skip_build_for_testing" = false ]; then
     -configuration Debug \
     -skipMacroValidation \
     CODE_SIGNING_ALLOWED=NO \
-  | xcpretty -c || fail "Build for testing failed."
+  | xcbeautify
   success "Build for testing completed."
 else
     echo "Skipping build for testing as requested (--test-without-building)."
@@ -146,7 +130,7 @@ set -o pipefail && xcodebuild test-without-building \
   -derivedDataPath "$TEST_DERIVED_DATA_DIR" \
   -enableCodeCoverage NO \
   -resultBundlePath "$TEST_RESULTS_DIR/ui/TestResults.xcresult" \
-| xcbeautify || fail "UI tests failed."
+| xcbeautify --report junit --report-path "$TEST_RESULTS_DIR/ui/junit.xml"
 
 # UI テスト結果バンドルの存在を確認
 echo "Verifying UI test results bundle..."

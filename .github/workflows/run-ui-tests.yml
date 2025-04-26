@@ -19,9 +19,6 @@ jobs:
       uses: maxim-lobanov/setup-xcode@v1
       with:
         xcode-version: '16.2'
-
-    - name: Install xcpretty
-      run: gem install xcpretty
         
     - name: Create Test Output Directories
       run: mkdir -p ci-outputs/test-results/ui ci-outputs/test-results/derived-data
@@ -54,7 +51,7 @@ jobs:
           -configuration Debug \
           -skipMacroValidation \
           CODE_SIGNING_ALLOWED=NO \
-          | xcpretty -c
+          | xcbeautify
       continue-on-error: false
       
     - name: Run UI Tests
@@ -70,7 +67,7 @@ jobs:
           -derivedDataPath ./ci-outputs/test-results/DerivedData \
           -enableCodeCoverage NO \
           -resultBundlePath ./ci-outputs/test-results/ui/TestResults.xcresult \
-          | xcbeautify --report junit --report-path ./ci-outputs/test-results/ui/junit.xml || echo "UI test execution finished with non-zero exit code."
+          | xcbeautify --report junit --report-path ./ci-outputs/test-results/ui/junit.xml
           
         # Capture the exit status of xcodebuild (first command in the pipe)
         XCODEBUILD_EXIT_CODE=${PIPESTATUS[0]}
