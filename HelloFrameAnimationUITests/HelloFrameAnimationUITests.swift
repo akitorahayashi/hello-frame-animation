@@ -1,7 +1,6 @@
 import XCTest
 
 final class HelloFrameAnimationUITests: XCTestCase {
-    
     var app: XCUIApplication!
 
     // スクリーンショットのベースディレクトリ
@@ -16,7 +15,7 @@ final class HelloFrameAnimationUITests: XCTestCase {
         case going = "Going"
         case returning = "Return"
         func directory(baseURL: URL) -> URL {
-            baseURL.appendingPathComponent(self.rawValue)
+            baseURL.appendingPathComponent(rawValue)
         }
     }
 
@@ -99,7 +98,7 @@ final class HelloFrameAnimationUITests: XCTestCase {
                 return
             }
 
-            var previousTargetElapsedTime: Double = 0.0
+            var previousTargetElapsedTime = 0.0
 
             for (index, stepConfig) in CaptureStep.sequence.enumerated() {
                 let targetElapsedTime = duration * timeFractions[index]
